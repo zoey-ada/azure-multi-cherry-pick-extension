@@ -5,7 +5,7 @@ import { Button } from "azure-devops-ui/Button";
 import { Tooltip } from "azure-devops-ui/TooltipEx";
 import { Observer } from "azure-devops-ui/Observer";
 import { TextField, TextFieldWidth } from "azure-devops-ui/TextField";
-import { Guid } from "../utilities";
+import { createPrIdentity, Guid } from "../utilities";
 import { Checkbox } from "azure-devops-ui/Checkbox";
 import { ArrayItemProvider } from "azure-devops-ui/Utilities/Provider";
 import { ObservableValue } from "azure-devops-ui/Core/Observable";
@@ -37,6 +37,8 @@ import { GetAllBranchesAsync } from "../services/gitBranchService";
 import { GitPullRequest } from "azure-devops-extension-api/Git";
 import { ButtonGroup } from "azure-devops-ui/ButtonGroup";
 import { Icon } from "azure-devops-ui/Icon";
+import { IdentityPicker, IIdentity } from "azure-devops-ui/IdentityPicker";
+import { PeoplePickerProvider } from "azure-devops-extension-api/Identities"
 
 interface Props {
   targets: ICherryPickTarget[];
@@ -70,11 +72,23 @@ export class FormView extends React.Component<Props, FormState> {
       targetBranch: "",
       topicBranch: "",
       pullRequestName: "",
+      requiredReviewers: new Array<IIdentity>(),
+      optionalReviewers: new Array<IIdentity>(),
       createPr: true,
       error: false,
       errorMessage: "",
       selection: new DropdownSelection()
     };
+
+    this.props.pullRequest.reviewers.forEach(reviewer => {
+      const prIdentity = createPrIdentity(reviewer);
+
+      if (reviewer.isRequired)
+        newTarget.requiredReviewers.push(prIdentity)
+      else
+        newTarget.optionalReviewers.push(prIdentity)
+    });
+
     const { targets } = this.props;
     let newTargets = [...targets];
     newTargets.push(newTarget);
@@ -303,6 +317,58 @@ export class FormView extends React.Component<Props, FormState> {
     );
   };
 
+  handleIdentityAdded = (tag: IIdentity, id: string, isRequired: boolean = false) => {
+    const { targets } = this.props;
+    const rowIndex = findIndex(id, targets);
+    let newTargets = [...targets];
+
+    let identities = newTargets[rowIndex].requiredReviewers.concat(newTargets[rowIndex].optionalReviewers);
+
+    if (identities.find(entry => entry.mail == tag.mail) === undefined) {
+      isRequired ? newTargets[rowIndex].requiredReviewers.push(tag) : newTargets[rowIndex].optionalReviewers.push(tag);
+    }
+    else if (isRequired)
+    {
+      let index = newTargets[rowIndex].optionalReviewers.findIndex(entry => entry.mail == tag.mail);
+      if (index !== -1) {
+        newTargets[rowIndex].optionalReviewers.splice(index, 1);
+        newTargets[rowIndex].requiredReviewers.push(tag);
+      }
+    }
+
+    this.props.updateTargets(newTargets);
+  }
+
+  handleIdentityRemoved = (tag: IIdentity, id: string, isRequired: boolean = false) => {
+    const { targets } = this.props;
+    const rowIndex = findIndex(id, targets);
+    let newTargets = [...targets];
+
+    let identityStore = isRequired ? newTargets[rowIndex].requiredReviewers : newTargets[rowIndex].optionalReviewers;
+
+    let index = identityStore.findIndex(entry => entry.mail == tag.mail);
+    if (index !== -1)
+      identityStore.splice(index, 1);
+
+    this.props.updateTargets(newTargets);
+  }
+
+  handleIdentitiesRemoved = (identities: IIdentity[], id: string, isRequired: boolean) => {
+    const { targets } = this.props;
+    const rowIndex = findIndex(id, targets);
+    let newTargets = [...targets];
+
+    let identityStore = isRequired ? newTargets[rowIndex].requiredReviewers : newTargets[rowIndex].optionalReviewers;
+
+    identities.forEach((identity) => {
+      let index = identityStore.findIndex(entry => entry.mail == identity.mail);
+      if (index !== -1)
+        identityStore.splice(index, 1);
+    });
+
+    this.props.updateTargets(newTargets);
+  }
+
   renderFormColumn = (
     rowIndex: number,
     columnIndex: number,
@@ -373,7 +439,7 @@ export class FormView extends React.Component<Props, FormState> {
 
             {tableItem.createPr && (
               <tr className="cherry-pick-row">
-                <td className="cherry-pick-text">Pull request title:</td>
+                <td className="cherry-pick-multiline-text">Pull request title:</td>
                 <td className="cherry-pick-row">
                   <FormItem message={tableItem.errorMessage}>
                     <TextField
@@ -383,6 +449,54 @@ export class FormView extends React.Component<Props, FormState> {
                       }
                       placeholder="type here..."
                       width={TextFieldWidth.auto}
+                    />
+                  </FormItem>
+                </td>
+              </tr>
+            )}
+
+            {tableItem.createPr && (
+              <tr className="cherry-pick-row">
+                <td className="cherry-pick-multiline-text">Required Reviewers:</td>
+                <td className="cherry-pick-row">
+                  <FormItem message={tableItem.errorMessage}>
+                    <IdentityPicker
+                      selectedIdentities={tableItem.requiredReviewers}
+                      onIdentityAdded={(tag) =>
+                        this.handleIdentityAdded(tag, tableItem.id, true)
+                      }
+                      onIdentityRemoved={(tag) =>
+                        this.handleIdentityRemoved(tag, tableItem.id, true)
+                      }
+                      onIdentitiesRemoved={(identities) =>
+                        this.handleIdentitiesRemoved(identities, tableItem.id, true)
+                      }
+                      pickerProvider={new PeoplePickerProvider()}
+                      placeholderText="type here..."
+                    />
+                  </FormItem>
+                </td>
+              </tr>
+            )}
+
+            {tableItem.createPr && (
+              <tr className="cherry-pick-row">
+                <td className="cherry-pick-multiline-text">Optional Reviewers:</td>
+                <td className="cherry-pick-row">
+                  <FormItem message={tableItem.errorMessage}>
+                    <IdentityPicker
+                      selectedIdentities={tableItem.optionalReviewers}
+                      onIdentityAdded={(tag) =>
+                        this.handleIdentityAdded(tag, tableItem.id, false)
+                      }
+                      onIdentityRemoved={(tag) =>
+                        this.handleIdentityRemoved(tag, tableItem.id, false)
+                      }
+                      onIdentitiesRemoved={(identities) =>
+                        this.handleIdentitiesRemoved(identities, tableItem.id, false)
+                      }
+                      pickerProvider={new PeoplePickerProvider()}
+                      placeholderText="type here..."
                     />
                   </FormItem>
                 </td>
@@ -441,6 +555,9 @@ export class FormView extends React.Component<Props, FormState> {
             <Table<ICherryPickTarget>
               columns={this.asyncColumns}
               itemProvider={currentTargets}
+              onFocus={() => { }}
+              selectRowOnClick={false}
+              showLines={true}
             />
           </Observer>
           <ButtonGroup className="sample-panel-button-bar">

@@ -1,4 +1,6 @@
 import { getClient } from "azure-devops-extension-api";
+import { IIdentity } from "azure-devops-ui/IdentityPicker";
+import { IdentityRef } from "azure-devops-extension-api/WebApi/WebApi";
 
 import {
   GitRestClient,
@@ -9,10 +11,11 @@ import {
   GitAsyncOperationStatus,
   GitRepository,
   GitPullRequestSearchCriteria,
+  IdentityRefWithVote,
   PullRequestStatus
 } from "azure-devops-extension-api/Git";
 
-import { Constants, trimStart } from "../utilities";
+import { Constants, trimStart, createIdentityRef } from "../utilities";
 import { IRestClientResult } from "../interfaces";
 
 const client: GitRestClient = getClient(GitRestClient);
@@ -113,7 +116,9 @@ export async function CreatePullRequestAsync(
   pullRequestContext: GitPullRequest,
   topicBranchName: string,
   targetBranchName: string,
-  pullRequestName: string
+  pullRequestName: string,
+  requiredReviewers: IIdentity[],
+  optionalReviewers: IIdentity[]
 ): Promise<IRestClientResult<GitPullRequest>> {
   try {
     if (cherryPick.status !== GitAsyncOperationStatus.Completed) {
@@ -211,6 +216,17 @@ export async function CreatePullRequestAsync(
       pullRequestContext.repository.id,
       pullRequestContext.repository.project.id
     );
+
+    let reviewers: IdentityRef[] = [];
+    requiredReviewers.forEach(reviewer => reviewers.push(createIdentityRef(reviewer, true)));
+    optionalReviewers.forEach(reviewer => reviewers.push(createIdentityRef(reviewer, false)));
+
+    const createReviewersRequest: Promise<IdentityRefWithVote[]> = client.createPullRequestReviewers(
+      reviewers,
+      pullRequestContext.repository.id,
+      newPullRequest.codeReviewId,
+      pullRequestContext.repository.project.id);
+
 
     return { result: newPullRequest };
   } catch (ex) {
