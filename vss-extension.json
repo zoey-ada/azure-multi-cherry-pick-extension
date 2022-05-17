@@ -5,7 +5,10 @@
   "name": "PR Multi-Cherry-Pick",
   "description": "Cherry-pick a PR's commits into multiple branches at once",
   "demands": ["api-version/5.0"],
-  "scopes": ["vso.code_manage"],
+  "scopes": [
+    "vso.code_manage",
+    "vso.identity"
+  ],
   "categories": ["Azure Repos"],
   "targets": [
     {

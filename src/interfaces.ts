@@ -1,5 +1,6 @@
 import { GitPullRequest, GitCherryPick } from "azure-devops-extension-api/Git";
 import { DropdownSelection } from "azure-devops-ui/Utilities/DropdownSelection";
+import { IIdentity } from "azure-devops-ui/IdentityPicker";
 
 export interface IPullRequest {
   pullRequest: GitPullRequest;
@@ -9,6 +10,8 @@ export interface ICherryPickTarget {
   targetBranch: string;
   topicBranch: string;
   pullRequestName: string;
+  requiredReviewers: IIdentity[];
+  optionalReviewers: IIdentity[];
   id: string;
   createPr: boolean;
   error: boolean;
