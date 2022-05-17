@@ -14,7 +14,7 @@ import {
 } from "./services/cherryPickService";
 import { ICherryPickTarget, IResult, IRestClientResult } from "./interfaces";
 import { GitPullRequest } from "azure-devops-extension-api/Git";
-import { formatCherryPickUrl, formatPrUrl } from "./utilities";
+import { createPrIdentity, formatCherryPickUrl, formatPrUrl } from "./utilities";
 import { DropdownSelection } from "azure-devops-ui/Utilities/DropdownSelection";
 import { Guid, findIndex, checkValuesPopulated } from "./utilities";
 
@@ -42,6 +42,8 @@ class DialogContent extends React.Component<{}, IDialogState> {
       id: Guid.newGuid(),
       targetBranch: "",
       topicBranch: "",
+      requiredReviewers: [],
+      optionalReviewers: [],
       createPr: true,
       error: false,
       errorMessage: "",
@@ -62,12 +64,26 @@ class DialogContent extends React.Component<{}, IDialogState> {
     await SDK.ready();
 
     const config = SDK.getConfiguration();
-    const pr = config.pullRequest;
+    const pr: GitPullRequest = config.pullRequest;
 
     this.setState({
       pullRequest: pr,
       ready: true
     });
+
+    // load PR reviewers
+    let newTargets = [...this.state.targets];
+
+    pr.reviewers.forEach(reviewer => {
+      const prIdentity = createPrIdentity(reviewer);
+
+      if (reviewer.isRequired)
+        newTargets[0].requiredReviewers.push(prIdentity);
+      else
+        newTargets[0].optionalReviewers.push(prIdentity);
+    });
+
+    this.setState({ targets: newTargets });
 
     SDK.notifyLoadSucceeded().then(() => {
       SDK.resize();
@@ -160,7 +176,9 @@ class DialogContent extends React.Component<{}, IDialogState> {
         pullRequestContext,
         target.topicBranch,
         target.targetBranch,
-        target.pullRequestName
+        target.pullRequestName,
+        target.requiredReviewers,
+        target.optionalReviewers
       );
 
       if (createdPrResult.error || !createdPrResult.result) {

@@ -4,7 +4,8 @@ This tool offers an easy way to use the git cherry-pick operation to apply chang
 For each branch selected, a new topic branch will be created with the applied changes.
 If the **Pull request** option is selected, a pull request will be opened to the target branch.
 
-<img width="434" alt="Screen Shot 2019-05-13 at 1 00 27 PM" src="https://user-images.githubusercontent.com/19557880/57650379-87229e00-757f-11e9-8966-e00bb5416c8f.png"><img width="436" alt="Screen Shot 2019-05-13 at 1 00 46 PM" src="https://user-images.githubusercontent.com/19557880/57650380-87229e00-757f-11e9-9143-549002959cea.png">
+<img width="434" alt="Configurations for creating multiple cherry-picks" src="./img/formView.png">
+<img width="436" alt="Results summary listing new branches and pull requests" src="./img/summaryTable.png">
 
 ## Quick steps to get started using the tool
 
@@ -119,7 +120,7 @@ Although most code changes will be reflected immediately, you may still need to 
 
 ### **Configure your VS Code project to debug against Azure DevOps**
 
-In VS Code, press **F5** to start debugging (making sure the webpack-dev-server is still running). The default launch configuration should be set to **Firefox**. 
+In VS Code, press **F5** to start debugging (making sure the webpack-dev-server is still running). The default launch configuration should be set to **Firefox**.
 
 **Note**: Chrome configurations are included in the sample as well in case the Chrome debugging extension eventually supports iframes. However, debugging iframes is only supported in the Debugger for Firefox extension for now.
 

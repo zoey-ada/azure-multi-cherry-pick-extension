@@ -1,6 +1,8 @@
 import * as SDK from "azure-devops-extension-sdk";
-import { GitPullRequest, GitCherryPick } from "azure-devops-extension-api/Git";
+import { GitPullRequest, GitCherryPick, IdentityRefWithVote } from "azure-devops-extension-api/Git";
+import { IIdentity } from "azure-devops-ui/IdentityPicker";
 import { ICherryPickTarget } from "./interfaces";
+import { IdentityRef } from "azure-devops-extension-api/WebApi/WebApi";
 
 export class Guid {
   static newGuid() {
@@ -74,4 +76,49 @@ export function checkValuesPopulated(array: ICherryPickTarget[]) {
     }
   }
   return emptyValues;
+}
+
+export function hasOwnProperty<X extends {}, Y extends PropertyKey>
+	(obj: X, prop: Y): obj is X & Record<Y, unknown> {
+	return obj.hasOwnProperty(prop)
+}
+
+export function createPrIdentity(reviewer: IdentityRefWithVote): IIdentity {
+	let prIdentity = {
+		originalData: reviewer,
+		displayName: reviewer.displayName,
+		entityId: "",
+		entityType: "",
+		image: reviewer.imageUrl,
+		mail: reviewer.uniqueName,
+		originDirectory: "",
+		originId: "",
+	}
+	return prIdentity;
+}
+
+export function createIdentityRef(reviewer: IIdentity, isRequired: boolean): IdentityRef {
+  if (hasOwnProperty(reviewer, "originalData")) {
+    return reviewer.originalData as IdentityRef;
+  }
+  else {
+    let newReviewer = {
+      displayName: reviewer.displayName || "",
+      id: reviewer.localId || "",
+      isRequired: isRequired,
+      uniqueName: reviewer.mail || "",
+
+      url: "",
+      directoryAlias: "",
+      imageUrl: "",
+      inactive: false,
+      isAadIdentity: false,
+      isContainer: false,
+      isDeletedInOrigin: false,
+      profileUrl: "",
+      _links: [],
+      descriptor: "",
+    };
+    return newReviewer;
+  }
 }
