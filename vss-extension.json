@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
-  "version": "0.0.65",
-  "id": "pr-multi-cherry-pick",
+  "version": "0.1.5",
+  "id": "zada-azure-multi-cherry-pick",
   "name": "PR Multi-Cherry-Pick",
   "description": "Cherry-pick a PR's commits into multiple branches at once",
   "demands": ["api-version/5.0"],
@@ -27,17 +27,17 @@
   "tags": ["Repos", "PR", "Cherry-pick"],
   "repository": {
     "type": "git",
-    "uri": "https://github.com/microsoft/azure-repos-pr-multi-cherry-pick"
+    "uri": "https://github.com/zoey-ada/azure-multi-cherry-pick-extension"
   },
   "links": {
     "repository": {
-      "uri": "https://github.com/microsoft/azure-repos-pr-multi-cherry-pick"
+      "uri": "https://github.com/zoey-ada/azure-multi-cherry-pick-extension"
     },
     "issues": {
-      "uri": "https://github.com/microsoft/azure-repos-pr-multi-cherry-pick/issues"
+      "uri": "https://github.com/zoey-ada/azure-multi-cherry-pick-extension/issues"
     },
     "support": {
-      "uri": "mailto:1es-lighthouse-eng@microsoft.com"
+      "uri": "mailto:zoey.a.goetzinger@gmail.com"
     }
   },
   "files": [
