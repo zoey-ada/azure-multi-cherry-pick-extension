@@ -1,6 +1,6 @@
 {
   "manifestVersion": 1,
-  "version": "0.1.5",
+  "version": "0.0.2",
   "id": "zada-azure-multi-cherry-pick",
   "name": "PR Multi-Cherry-Pick",
   "description": "Cherry-pick a PR's commits into multiple branches at once",
