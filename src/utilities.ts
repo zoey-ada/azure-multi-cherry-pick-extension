@@ -99,7 +99,11 @@ export function createPrIdentity(reviewer: IdentityRefWithVote): IIdentity {
 
 export function createIdentityRef(reviewer: IIdentity, isRequired: boolean): IdentityRef {
   if (hasOwnProperty(reviewer, "originalData")) {
-    return reviewer.originalData as IdentityRef;
+    let newReviewer = reviewer.originalData as IdentityRefWithVote;
+    newReviewer.vote = 0;
+    newReviewer.votedFor = [];
+
+    return newReviewer;
   }
   else {
     let newReviewer = {
